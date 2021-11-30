@@ -14,6 +14,8 @@ public class TaskDtoFactory {
                 .name(entity.getName())
                 .createAt(entity.getCreateAt())
                 .description(entity.getDescription())
+                .leftTaskId(entity.getLeftTask().map(TaskEntity::getId).orElse(null))
+                .rightTaskId(entity.getRightTask().map(TaskEntity::getId).orElse(null))
                 .build();
 
     }

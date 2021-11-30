@@ -23,6 +23,12 @@ public class TaskDto {
     @JsonProperty("create_at")
     Instant createAt;
 
+    @JsonProperty("left_task_id")
+    Long leftTaskId;
+
+    @JsonProperty("right_task_id")
+    Long rightTaskId;
+
     @NonNull
     String description;
 }

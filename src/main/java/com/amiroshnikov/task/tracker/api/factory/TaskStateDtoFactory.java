@@ -1,6 +1,5 @@
 package com.amiroshnikov.task.tracker.api.factory;
 
-import com.amiroshnikov.task.tracker.api.dto.TaskDto;
 import com.amiroshnikov.task.tracker.api.dto.TaskStateDto;
 import com.amiroshnikov.task.tracker.store.entity.TaskStateEntity;
 import lombok.AccessLevel;

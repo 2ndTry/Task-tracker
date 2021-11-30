@@ -4,7 +4,6 @@ import com.amiroshnikov.task.tracker.api.controller.helper.ControllerHelper;
 import com.amiroshnikov.task.tracker.api.dto.AckDto;
 import com.amiroshnikov.task.tracker.api.dto.TaskStateDto;
 import com.amiroshnikov.task.tracker.api.exception.BadRequestException;
-import com.amiroshnikov.task.tracker.api.exception.NotFoundException;
 import com.amiroshnikov.task.tracker.api.factory.TaskStateDtoFactory;
 import com.amiroshnikov.task.tracker.store.entity.ProjectEntity;
 import com.amiroshnikov.task.tracker.store.entity.TaskStateEntity;
@@ -107,7 +106,7 @@ public class TaskStateController {
             throw new BadRequestException("Task state name can't be empty.");
         }
 
-        TaskStateEntity taskState = getTaskStateOrThrowException(taskStateId);
+        TaskStateEntity taskState = controllerHelper.getTaskStateOrThrowException(taskStateId);
 
         taskStateRepository
                 .findTaskStateEntityByProjectIdAndNameContainsIgnoreCase(
@@ -131,7 +130,7 @@ public class TaskStateController {
             @PathVariable(name = "task_state_id") Long taskStateId,
             @RequestParam(name = "left_task_state_id", required = false) Optional<Long> optionalLeftTaskStateId) {
 
-        TaskStateEntity changeTaskState = getTaskStateOrThrowException(taskStateId);
+        TaskStateEntity changeTaskState = controllerHelper.getTaskStateOrThrowException(taskStateId);
 
         ProjectEntity project = changeTaskState.getProject();
 
@@ -150,7 +149,7 @@ public class TaskStateController {
                         throw new BadRequestException("Left task state id equals changed task state.");
                     }
 
-                    TaskStateEntity leftTaskStateEntity = getTaskStateOrThrowException(leftTaskStateId);
+                    TaskStateEntity leftTaskStateEntity = controllerHelper.getTaskStateOrThrowException(leftTaskStateId);
 
                     if (!project.getId().equals(leftTaskStateEntity.getProject().getId())) {
                         throw new BadRequestException("Task state position can be changed within the same project.");
@@ -174,7 +173,7 @@ public class TaskStateController {
                     .getRightTaskState();
         }
 
-        replaceOldTaskStatePosition(changeTaskState);
+        controllerHelper.replaceOldTaskStatePosition(changeTaskState);
 
         if (optionalNewLeftTaskState.isPresent()) {
 
@@ -212,42 +211,13 @@ public class TaskStateController {
     @DeleteMapping(DELETE_TASK_STATE)
     public AckDto deleteTaskState(@PathVariable(name = "task_state_id") Long taskStateId) {
 
-        TaskStateEntity changeTaskState = getTaskStateOrThrowException(taskStateId);
+        TaskStateEntity changeTaskState = controllerHelper.getTaskStateOrThrowException(taskStateId);
 
-        replaceOldTaskStatePosition(changeTaskState);
+        controllerHelper.replaceOldTaskStatePosition(changeTaskState);
 
         taskStateRepository.delete(changeTaskState);
 
         return AckDto.builder().answer(true).build();
     }
 
-    private void replaceOldTaskStatePosition(TaskStateEntity changeTaskState) {
-
-        Optional<TaskStateEntity> optionalOldLeftTaskState = changeTaskState.getLeftTaskState();
-        Optional<TaskStateEntity> optionalOldRightTaskState = changeTaskState.getRightTaskState();
-
-        optionalOldLeftTaskState
-                .ifPresent(it -> {
-
-                    it.setRightTaskState(optionalOldRightTaskState.orElse(null));
-
-                    taskStateRepository.saveAndFlush(it);
-                });
-
-        optionalOldRightTaskState
-                .ifPresent(it -> {
-
-                    it.setLeftTaskState(optionalOldLeftTaskState.orElse(null));
-
-                    taskStateRepository.saveAndFlush(it);
-                });
-    }
-
-    private TaskStateEntity getTaskStateOrThrowException(Long taskStateId) {
-        return taskStateRepository
-                .findById(taskStateId)
-                .orElseThrow(() -> new NotFoundException(String.format("Task state with \"%s\" id doesn't exist!", taskStateId)
-                        )
-                );
-    }
 }
