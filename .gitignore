@@ -35,3 +35,4 @@ build/
 ### GRADLE ###
 /.gradle/
 /gradle/
+/gradle/wrapper/
